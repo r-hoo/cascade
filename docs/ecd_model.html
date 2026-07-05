@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cascade — ECD Model Documentation</title>
+  <style>
+    :root {
+      --bg:          #0f1117;
+      --bg-card:     #1a1f2e;
+      --bg-row:      #141824;
+      --border:      #2a3148;
+      --accent:      #4a9eff;
+      --accent-dim:  rgba(74,158,255,0.12);
+      --success:     #22c55e;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text:        #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #64748b;
+      --mono:        'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 0 0 80px;
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 60px 28px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .doc-header-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 24px;
+    }
+    .doc-badge {
+      display: inline-block;
+      background: var(--accent-dim); color: var(--accent);
+      border: 1px solid var(--accent); border-radius: 20px;
+      padding: 3px 14px; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .doc-title {
+      font-size: 28px; font-weight: 700;
+      letter-spacing: -0.01em; font-family: var(--mono);
+    }
+    .doc-subtitle { color: var(--text-2); font-size: 14px; margin-top: 4px; }
+    .doc-meta {
+      display: flex; flex-direction: column; align-items: flex-end;
+      gap: 4px; font-size: 12px; color: var(--text-3);
+      white-space: nowrap; padding-top: 4px;
+    }
+    .doc-meta strong { color: var(--text-2); }
+
+    /* ── NAV ── */
+    .doc-nav {
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      padding: 0 60px;
+    }
+    .doc-nav-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: flex; gap: 0;
+    }
+    .doc-nav a {
+      display: inline-block; padding: 12px 18px;
+      font-size: 13px; color: var(--text-2); text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .doc-nav a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── BODY ── */
+    .doc-body {
+      max-width: 1000px; margin: 0 auto;
+      padding: 48px 60px 0;
+      display: flex; flex-direction: column; gap: 48px;
+    }
+
+    /* ── SECTIONS ── */
+    .section { display: flex; flex-direction: column; gap: 20px; }
+    .section-header {
+      display: flex; align-items: center; gap: 14px;
+      padding-bottom: 14px; border-bottom: 1px solid var(--border);
+    }
+    .section-number {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--accent-dim); border: 1px solid var(--accent);
+      color: var(--accent); font-size: 13px; font-weight: 700;
+      font-family: var(--mono);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-title { font-size: 20px; font-weight: 700; }
+    .section-desc  { color: var(--text-2); font-size: 14px; line-height: 1.7; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .card-title {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 600; font-family: var(--mono);
+      color: var(--accent);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-body { padding: 20px; }
+
+    /* ── TWO-COL GRID ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* ── COMPETENCY ELEMENT CARD ── */
+    .element-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .element-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent-dim); color: var(--accent);
+      border-radius: 4px; padding: 3px 10px;
+      font-size: 10px; font-weight: 700; font-family: var(--mono);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      width: fit-content;
+    }
+    .element-name  { font-size: 15px; font-weight: 600; }
+    .element-def   { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+    .element-target {
+      font-size: 12px; color: var(--text-3);
+      border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px;
+    }
+    .element-target strong { color: var(--text-2); }
+
+    /* ── TABLE ── */
+    .doc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .doc-table th {
+      background: var(--bg); color: var(--text-3);
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 10px 14px;
+      border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .doc-table td {
+      padding: 11px 14px; border-bottom: 1px solid var(--border);
+      vertical-align: top; color: var(--text-2);
+    }
+    .doc-table tr:last-child td { border-bottom: none; }
+    .doc-table tr:hover td { background: var(--bg-row); }
+    .doc-table td:first-child { color: var(--text); font-family: var(--mono); font-size: 12px; }
+
+    /* ── PILLS ── */
+    .pill {
+      display: inline-block; border-radius: 4px; padding: 2px 8px;
+      font-size: 11px; font-weight: 600; font-family: var(--mono);
+    }
+    .pill-green  { background: rgba(34,197,94,0.12);  color: var(--success); }
+    .pill-yellow { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .pill-red    { background: rgba(239,68,68,0.12);  color: var(--danger);  }
+    .pill-blue   { background: var(--accent-dim);     color: var(--accent);  }
+    .pill-gray   { background: rgba(100,116,139,0.12);color: var(--text-3);  }
+
+    /* ── CODE ── */
+    code {
+      font-family: var(--mono); font-size: 12px;
+      background: rgba(74,158,255,0.08); color: var(--accent);
+      padding: 1px 6px; border-radius: 3px;
+    }
+    pre {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+      font-family: var(--mono); font-size: 12px; color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: 0; padding: 20px;
+    }
+    .flow-node {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 16px; font-size: 13px;
+      text-align: center; min-width: 110px;
+    }
+    .flow-node .fn-label { font-weight: 600; color: var(--text); }
+    .flow-node .fn-sub   { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .flow-arrow {
+      color: var(--accent); font-size: 18px; padding: 0 8px;
+      flex-shrink: 0;
+    }
+    .flow-node.highlight { border-color: var(--accent); background: var(--accent-dim); }
+    .flow-node.highlight .fn-label { color: var(--accent); }
+
+    /* ── NODE TABLE ── */
+    .node-row {
+      display: grid;
+      grid-template-columns: 60px 60px 100px 1fr 220px;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .node-row.header {
+      background: var(--bg);
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--text-3);
+    }
+    .node-row:last-child { border-bottom: none; }
+    .node-row:not(.header):hover { background: var(--bg-row); }
+    .node-cell {
+      padding: 10px 14px; color: var(--text-2);
+      display: flex; align-items: center;
+    }
+    .node-cell:first-child { font-family: var(--mono); color: var(--text); }
+
+    /* ── LOOP DIAGRAM ── */
+    .loop-diagram { padding: 24px; display: flex; justify-content: center; }
+    .loop-svg { width: 100%; max-width: 560px; height: auto; }
+
+    /* ── DIVIDER ── */
+    hr { border: none; border-top: 1px solid var(--border); }
+
+    /* ── CALLOUT ── */
+    .callout {
+      border-radius: 8px; padding: 14px 18px;
+      font-size: 13px; line-height: 1.6;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .callout-info    { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--text-2); }
+    .callout-warn    { background: rgba(245,158,11,0.08); border: 1px solid var(--warning); color: var(--text-2); }
+    .callout-icon    { font-size: 16px; flex-shrink: 0; padding-top: 1px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     HEADER
+═══════════════════════════════════════ -->
+<div class="doc-header">
+  <div class="doc-header-inner">
+    <div>
+      <div class="doc-badge">ECD Model Documentation</div>
+      <div class="doc-title">Cascade</div>
+      <div class="doc-subtitle">Evidence-Centered Design specification for Scenario 1 — Drought Response</div>
+    </div>
+    <div class="doc-meta">
+      <div><strong>Track</strong> Development</div>
+      <div><strong>Course</strong> CS 6460 Educational Technology</div>
+      <div><strong>Scenario</strong> 1 of 3</div>
+      <div><strong>Methodology</strong> Design-Based Research</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="doc-nav">
+  <div class="doc-nav-inner">
+    <a href="#overview">Overview</a>
+    <a href="#competency">Competency Model</a>
+    <a href="#evidence">Evidence Model</a>
+    <a href="#task">Task Model</a>
+    <a href="#scoring">Scoring</a>
+    <a href="#debrief">Debrief</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     BODY
+═══════════════════════════════════════ -->
+<div class="doc-body">
+
+  <!-- ── OVERVIEW ── -->
+  <section class="section" id="overview">
+    <div class="section-header">
+      <div class="section-number">0</div>
+      <div>
+        <div class="section-title">Framework Overview</div>
+        <div class="section-desc">
+          Cascade uses Evidence-Centered Design (ECD) — a principled assessment framework developed by
+          Mislevy, Almond &amp; Lukas (2003) — to connect in-game behavioral data to meaningful
+          estimates of learner competency. ECD structures assessment around three interlinked models.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body flow">
+        <div class="flow-node highlight">
+          <div class="fn-label">Competency Model</div>
+          <div class="fn-sub">What to measure</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node highlight">
+          <div class="fn-label">Evidence Model</div>
+          <div class="fn-sub">What behaviors prove it</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node highlight">
+          <div class="fn-label">Task Model</div>
+          <div class="fn-sub">What situations elicit it</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="fn-label">Interaction Logs</div>
+          <div class="fn-sub">Raw behavioral data</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="fn-label">Competency Profile</div>
+          <div class="fn-sub">Formative feedback</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-icon">ℹ️</div>
+      <div>
+        Working backwards from the competency model ensures that every game design decision —
+        scenario structure, information layout, decision options — serves a measurement purpose.
+        The game and the assessment are the same artifact.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── COMPETENCY MODEL ── -->
+  <section class="section" id="competency">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <div>
+        <div class="section-title">Competency Model</div>
+        <div class="section-desc">
+          The competency model defines the knowledge, skills, and reasoning patterns the game
+          is designed to develop and measure. Cascade targets four of the nine systems thinking
+          elements identified by Arnold &amp; Wade (2015), selected for their measurability
+          through behavioral indicators in a single-player simulation context.
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="element-card">
+        <div class="element-tag">CE-1</div>
+        <div class="element-name">Causal Reasoning</div>
+        <div class="element-def">
+          Identifying and tracking cause-and-effect relationships between system
+          variables — understanding that one variable's change drives changes in others
+          through defined causal pathways.
+        </div>
+        <div class="element-target">
+          <strong>Failure mode targeted:</strong> Players who do not consult the causal
+          structure when making decisions are reasoning from intuition rather than
+          system understanding.
+        </div>
+      </div>
+
+      <div class="element-card">
+        <div class="element-tag">CE-2</div>
+        <div class="element-name">Feedback Loop Recognition</div>
+        <div class="element-def">
+          Recognizing that system variables form circular causal chains — particularly
+          distinguishing the balancing feedback loop (B1) in which reservoir level
+          constrains sustainable extraction.
+        </div>
+        <div class="element-target">
+          <strong>Failure mode targeted:</strong> Players who over-extract during the
+          drought are treating extraction as an independent decision rather than
+          as a variable constrained by reservoir state.
+        </div>
+      </div>
+
+      <div class="element-card">
+        <div class="element-tag">CE-3</div>
+        <div class="element-name">Time-Delay Awareness</div>
+        <div class="element-def">
+          Accounting for the lag between an intervention and its downstream effects.
+          In Scenario 1, rainfall effects register one time step after they occur,
+          requiring forward-looking rather than reactive decisions.
+        </div>
+        <div class="element-target">
+          <strong>Failure mode targeted:</strong> Players who respond to drought
+          only after the reservoir visibly drops are reacting to events rather than
+          reasoning about trajectories.
+        </div>
+      </div>
+
+      <div class="element-card">
+        <div class="element-tag">CE-4</div>
+        <div class="element-name">Multi-variable Synthesis</div>
+        <div class="element-def">
+          Reasoning about multiple interacting variables simultaneously — in Scenario 1,
+          balancing extraction rate against both current reservoir level and incoming
+          rainfall when setting daily extraction.
+        </div>
+        <div class="element-target">
+          <strong>Failure mode targeted:</strong> Players who consult only one variable
+          (e.g., demand) before deciding are not synthesizing the full system state.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📐 Theoretical Grounding</div>
+      <div class="card-body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Element</th>
+              <th>Arnold &amp; Wade (2015)</th>
+              <th>Sweeney &amp; Sterman (2000) failure mode</th>
+              <th>Verhoeven et al. (2018) rubric dimension</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CE-1 Causal Reasoning</td>
+              <td>Causality</td>
+              <td>Event-driven (not stock-and-flow) reasoning</td>
+              <td>Cause-effect identification</td>
+            </tr>
+            <tr>
+              <td>CE-2 Feedback Recognition</td>
+              <td>Feedback loops</td>
+              <td>Ignoring accumulation constraints</td>
+              <td>Feedback structure mapping</td>
+            </tr>
+            <tr>
+              <td>CE-3 Time-Delay Awareness</td>
+              <td>Dynamic thinking</td>
+              <td>Oscillation from delayed response</td>
+              <td>Temporal reasoning</td>
+            </tr>
+            <tr>
+              <td>CE-4 Multi-variable Synthesis</td>
+              <td>Synthesis</td>
+              <td>Single-variable focus</td>
+              <td>Multi-stakeholder / multi-factor analysis</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── EVIDENCE MODEL ── -->
+  <section class="section" id="evidence">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <div>
+        <div class="section-title">Evidence Model</div>
+        <div class="section-desc">
+          The evidence model specifies which observable in-game behaviors constitute
+          evidence of each competency element, and what direction of evidence they provide.
+          All behaviors are captured automatically by the interaction logging pipeline
+          without interrupting gameplay.
+        </div>
+      </div>
+    </div>
+
+    <!-- CE-1 -->
+    <div class="card">
+      <div class="card-title">🔵 CE-1 — Causal Reasoning</div>
+      <div class="card-body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Behavior</th>
+              <th>Log Event</th>
+              <th>Payload Key</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Player opens causal structure panel before confirming decision</td>
+              <td><code>VIEW_CAUSAL_PANEL</code></td>
+              <td>—</td>
+              <td><span class="pill pill-green">Positive</span></td>
+            </tr>
+            <tr>
+              <td>Player consults causal panel on ≥ 50% of decision nodes</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>viewed_causal_panel: true</code></td>
+              <td><span class="pill pill-green">Positive</span></td>
+            </tr>
+            <tr>
+              <td>Player never opens causal panel across session</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>viewed_causal_panel: false</code> (all nodes)</td>
+              <td><span class="pill pill-red">Negative</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CE-2 -->
+    <div class="card">
+      <div class="card-title">🟢 CE-2 — Feedback Loop Recognition</div>
+      <div class="card-body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Behavior</th>
+              <th>Log Event</th>
+              <th>Payload Key</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Extraction ≤ 2 MG on Day 4 (same day drought begins)</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>node_index: 3, extraction_mgd: ≤ 2</code></td>
+              <td><span class="pill pill-green">Strong positive</span></td>
+            </tr>
+            <tr>
+              <td>Extraction ≤ 2 MG on Day 5 (one day late)</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>node_index: 4, extraction_mgd: ≤ 2</code></td>
+              <td><span class="pill pill-yellow">Partial</span></td>
+            </tr>
+            <tr>
+              <td>Extraction ≥ 6 MG maintained through Days 4–6</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>node_index: 3–5, extraction_mgd: ≥ 6</code></td>
+              <td><span class="pill pill-red">Negative</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CE-3 -->
+    <div class="card">
+      <div class="card-title">🟡 CE-3 — Time-Delay Awareness</div>
+      <div class="card-body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Behavior</th>
+              <th>Log Event</th>
+              <th>Payload Key</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Extraction ≤ 2 MG on Day 3 — responds to forecast before drought arrives</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>node_index: 2, extraction_mgd: ≤ 2</code></td>
+              <td><span class="pill pill-green">Strong positive</span></td>
+            </tr>
+            <tr>
+              <td>Decision latency spike on Days 3–4 vs. Days 1–2</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>time_to_confirm_ms</code> (nodes 2–3 vs. 0–1)</td>
+              <td><span class="pill pill-yellow">Soft positive</span></td>
+            </tr>
+            <tr>
+              <td>Decision revised before confirming on drought nodes</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>revision_count: ≥ 1</code> (nodes 3–5)</td>
+              <td><span class="pill pill-yellow">Soft positive</span></td>
+            </tr>
+            <tr>
+              <td>No change in extraction until Day 5 or later</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>extraction_mgd</code> unchanged nodes 2–4</td>
+              <td><span class="pill pill-red">Negative</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CE-4 -->
+    <div class="card">
+      <div class="card-title">🟣 CE-4 — Multi-variable Synthesis</div>
+      <div class="card-body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Behavior</th>
+              <th>Log Event</th>
+              <th>Payload Key</th>
+              <th>Evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Player views both <code>reservoir</code> and <code>rainfall</code> stats before deciding on ≥ 50% of nodes</td>
+              <td><code>VIEW_STAT</code> + <code>CONFIRM_DECISION</code></td>
+              <td><code>stats_viewed</code> contains both</td>
+              <td><span class="pill pill-green">Positive</span></td>
+            </tr>
+            <tr>
+              <td>Player selects extraction ≤ 2 while supply deficit &gt; 0 (accepts short-term deficit to protect reservoir)</td>
+              <td><code>CONFIRM_DECISION</code></td>
+              <td><code>extraction_mgd: ≤ 2</code> + <code>supply_deficit: &gt; 0</code></td>
+              <td><span class="pill pill-green">Positive</span></td>
+            </tr>
+            <tr>
+              <td>Player consults only one stat type across session</td>
+              <td><code>VIEW_STAT</code></td>
+              <td>single <code>stat</code> value repeated</td>
+              <td><span class="pill pill-red">Negative</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TASK MODEL ── -->
+  <section class="section" id="task">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <div>
+        <div class="section-title">Task Model</div>
+        <div class="section-desc">
+          The task model specifies the scenario structure that elicits the target behaviors.
+          Each decision node is engineered to create conditions under which specific
+          competency elements will be revealed by learner choice.
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback loop diagram -->
+    <div class="card">
+      <div class="card-title">🔄 System Structure — Balancing Feedback Loop B1</div>
+      <div class="loop-diagram">
+        <svg class="loop-svg" viewBox="0 0 560 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr-pos" markerWidth="8" markerHeight="6"
+                    refX="7" refY="3" orient="auto">
+              <polygon points="0 0,8 3,0 6" fill="#22c55e"/>
+            </marker>
+            <marker id="arr-neg" markerWidth="8" markerHeight="6"
+                    refX="7" refY="3" orient="auto">
+              <polygon points="0 0,8 3,0 6" fill="#ef4444"/>
+            </marker>
+            <marker id="arr-blue" markerWidth="8" markerHeight="6"
+                    refX="7" refY="3" orient="auto">
+              <polygon points="0 0,8 3,0 6" fill="#4a9eff"/>
+            </marker>
+          </defs>
+
+          <!-- Nodes -->
+          <circle cx="100" cy="110" r="46" fill="#1a1f2e" stroke="#2a3148" stroke-width="2"/>
+          <text x="100" y="106" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="monospace">Reservoir</text>
+          <text x="100" y="122" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="monospace">Level</text>
+
+          <circle cx="300" cy="50"  r="46" fill="#1a1f2e" stroke="#2a3148" stroke-width="2"/>
+          <text x="300" y="46"  text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="monospace">Extraction</text>
+          <text x="300" y="62"  text-anchor="middle" fill="#94a3b8" font-size="11" font-family="monospace">Rate</text>
+
+          <circle cx="300" cy="170" r="46" fill="#1a1f2e" stroke="#2a3148" stroke-width="2"/>
+          <text x="300" y="166" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="monospace">Treated</text>
+          <text x="300" y="182" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="monospace">Output</text>
+
+          <circle cx="480" cy="110" r="46" fill="#1a1f2e" stroke="#2a3148" stroke-width="2"/>
+          <text x="480" y="106" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="monospace">Supply</text>
+          <text x="480" y="122" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="monospace">Deficit</text>
+
+          <!-- Rainfall node (small) -->
+          <circle cx="100" cy="30" r="28" fill="#141824" stroke="#2a3148" stroke-width="1.5"/>
+          <text x="100" y="34" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="monospace">Rainfall</text>
+
+          <!-- Edges -->
+          <!-- Rainfall → Reservoir (+) -->
+          <line x1="100" y1="58" x2="100" y2="64" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr-pos)"/>
+          <text x="108" y="62" fill="#22c55e" font-size="13" font-family="monospace">+</text>
+
+          <!-- Reservoir → Extraction B1 feedback (dashed blue) -->
+          <path d="M 146 90 Q 220 20 254 50" stroke="#4a9eff" stroke-width="2"
+                stroke-dasharray="5 3" fill="none" marker-end="url(#arr-blue)"/>
+          <text x="185" y="42" fill="#4a9eff" font-size="11" font-family="monospace">+ (B1)</text>
+
+          <!-- Extraction → Reservoir (-) -->
+          <path d="M 258 68 Q 195 110 146 110" stroke="#ef4444" stroke-width="1.5"
+                fill="none" marker-end="url(#arr-neg)"/>
+          <text x="196" y="100" fill="#ef4444" font-size="13" font-family="monospace">−</text>
+
+          <!-- Extraction → Treated (+) -->
+          <line x1="300" y1="96" x2="300" y2="124" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr-pos)"/>
+          <text x="308" y="115" fill="#22c55e" font-size="13" font-family="monospace">+</text>
+
+          <!-- Treated → Deficit (-) -->
+          <path d="M 345 158 Q 415 140 434 130" stroke="#ef4444" stroke-width="1.5"
+                fill="none" marker-end="url(#arr-neg)"/>
+          <text x="392" y="135" fill="#ef4444" font-size="13" font-family="monospace">−</text>
+
+          <!-- B1 label -->
+          <text x="220" y="195" text-anchor="middle" fill="#4a9eff"
+                font-size="11" font-family="monospace">B1 = Balancing Feedback Loop</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Node sequence table -->
+    <div class="card">
+      <div class="card-title">📋 Decision Node Sequence</div>
+      <div class="card-body" style="padding:0">
+        <div class="node-row header">
+          <div class="node-cell">Node</div>
+          <div class="node-cell">Day</div>
+          <div class="node-cell">Rainfall</div>
+          <div class="node-cell">Narrative Event</div>
+          <div class="node-cell">Competency Elements Targeted</div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">0</div>
+          <div class="node-cell">1</div>
+          <div class="node-cell">3.0 MG</div>
+          <div class="node-cell">Normal operations. System briefing.</div>
+          <div class="node-cell">
+            <span class="pill pill-blue">CE-1</span>
+            <span class="pill pill-gray" style="margin-left:4px">baseline</span>
+          </div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">1</div>
+          <div class="node-cell">2</div>
+          <div class="node-cell">3.0 MG</div>
+          <div class="node-cell">Normal operations. First repetition.</div>
+          <div class="node-cell">
+            <span class="pill pill-blue">CE-1</span>
+            <span class="pill pill-gray" style="margin-left:4px">baseline</span>
+          </div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">2</div>
+          <div class="node-cell">3</div>
+          <div class="node-cell">3.0 MG</div>
+          <div class="node-cell">⚠️ Drought forecast issued for next week.</div>
+          <div class="node-cell">
+            <span class="pill pill-yellow">CE-3</span>
+            <span style="margin-left:4px; font-size:11px; color:var(--text-3)">anticipation test</span>
+          </div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">3</div>
+          <div class="node-cell">4</div>
+          <div class="node-cell">1.0 MG</div>
+          <div class="node-cell">🔴 Drought begins. Rainfall drops sharply.</div>
+          <div class="node-cell">
+            <span class="pill pill-green">CE-2</span>
+            <span class="pill pill-yellow" style="margin-left:4px">CE-3</span>
+            <span class="pill pill-blue" style="margin-left:4px">CE-4</span>
+          </div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">4</div>
+          <div class="node-cell">5</div>
+          <div class="node-cell">1.0 MG</div>
+          <div class="node-cell">🔴 Drought continues. Reservoir trend visible.</div>
+          <div class="node-cell">
+            <span class="pill pill-green">CE-2</span>
+            <span class="pill pill-blue" style="margin-left:4px">CE-4</span>
+          </div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">5</div>
+          <div class="node-cell">6</div>
+          <div class="node-cell">0.5 MG</div>
+          <div class="node-cell">🚨 Drought worsens. Red alert if reservoir &lt; 35 MG.</div>
+          <div class="node-cell">
+            <span class="pill pill-green">CE-2</span>
+            <span class="pill pill-blue" style="margin-left:4px">CE-4</span>
+            <span style="margin-left:4px; font-size:11px; color:var(--text-3)">crisis test</span>
+          </div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">6</div>
+          <div class="node-cell">7</div>
+          <div class="node-cell">2.0 MG</div>
+          <div class="node-cell">Rainfall recovering. Reservoir trend improving.</div>
+          <div class="node-cell">
+            <span class="pill pill-yellow">CE-3</span>
+            <span style="margin-left:4px; font-size:11px; color:var(--text-3)">recovery reasoning</span>
+          </div>
+        </div>
+        <div class="node-row">
+          <div class="node-cell">7</div>
+          <div class="node-cell">8</div>
+          <div class="node-cell">3.0 MG</div>
+          <div class="node-cell">Normal rainfall returns. Final operating day.</div>
+          <div class="node-cell">
+            <span class="pill pill-blue">CE-1</span>
+            <span class="pill pill-green" style="margin-left:4px">CE-2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- State equations -->
+    <div class="card">
+      <div class="card-title">⚙️ State Update Equations</div>
+      <div class="card-body">
+        <pre>
+  Treated output  =  E × η
+  Supply deficit  =  max( 0,  D − Treated output )
+  Reservoir (t+1) =  clamp( R(t) + Rainfall − E,  0,  100 )
+
+  Where:
+    E   = extraction rate (player-controlled: 2 | 4 | 6 | 8 MG/day)
+    η   = treatment efficiency = 0.80
+    D   = daily demand = 4.0 MG/day
+    R   = reservoir level (stock)
+
+  Parameters:
+    Reservoir start = 60 MG
+    Minimum safe    = 20 MG  (alert threshold, not hard floor)
+    Maximum         = 100 MG</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SCORING ── -->
+  <section class="section" id="scoring">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <div>
+        <div class="section-title">Scoring Pipeline</div>
+        <div class="section-desc">
+          After the final decision is confirmed, the backend applies the evidence rules
+          to the full session's Decision rows and interaction logs. The resulting
+          competency profile drives the radar chart shown on the debrief screen.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Evidence Rules — Current Implementation</div>
+      <div class="card-body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Element</th>
+              <th>Rule</th>
+              <th>Threshold</th>
+              <th>Score</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CE-1 Causal Reasoning</td>
+              <td>Causal panel viewed on ≥ 50% of nodes</td>
+              <td>ratio ≥ 0.5</td>
+              <td><span class="pill pill-green">high</span> / <span class="pill pill-red">low</span></td>
+              <td>Behavioral heuristic</td>
+            </tr>
+            <tr>
+              <td>CE-2 Feedback Recognition</td>
+              <td>Extraction ≤ 2 MG on node 3 (Day 4)</td>
+              <td>extraction_mgd ≤ 2</td>
+              <td><span class="pill pill-green">high</span></td>
+              <td>JSON evidence rule</td>
+            </tr>
+            <tr>
+              <td>CE-3 Time-Delay Awareness</td>
+              <td>Extraction ≤ 2 MG on node 2 (Day 3)</td>
+              <td>extraction_mgd ≤ 2</td>
+              <td><span class="pill pill-green">high</span></td>
+              <td>JSON evidence rule</td>
+            </tr>
+            <tr>
+              <td>CE-4 Multi-variable Synthesis</td>
+              <td>Both reservoir + rainfall viewed on ≥ 50% of nodes</td>
+              <td>ratio ≥ 0.5</td>
+              <td><span class="pill pill-green">high</span> / <span class="pill pill-red">low</span></td>
+              <td>Behavioral heuristic</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⬆️ Interaction Log Schema</div>
+        <div class="card-body">
+          <pre style="font-size:11px">{
+  "session_id":        "uuid",
+  "scenario_id":       "scenario_1",
+  "node_index":        3,
+  "event_type":        "VIEW_STAT",
+  "payload":           { "stat": "rainfall" },
+  "client_timestamp_ms": 1700000000000
+}</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">✅ Decision Row Schema</div>
+        <div class="card-body">
+          <pre style="font-size:11px">{
+  "node_index":          3,
+  "extraction_mgd":      2,
+  "time_to_confirm_ms":  14200,
+  "revision_count":      1,
+  "viewed_causal_panel": true,
+  "stats_viewed":        ["reservoir","rainfall"],
+  "reservoir_after":     57.0,
+  "treated_output":      1.6,
+  "supply_deficit":      2.4
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-icon">⚠️</div>
+      <div>
+        <strong>Open design issue:</strong> CE-2 and CE-3 are scored from single decision
+        nodes (nodes 3 and 2 respectively). This is a tractable MVP implementation but
+        produces binary scores from single data points. Scenarios 2 and 3 will extend
+        these rules to accumulate evidence across multiple nodes for more robust estimates.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── DEBRIEF ── -->
+  <section class="section" id="debrief">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <div>
+        <div class="section-title">Debrief Configuration</div>
+        <div class="section-desc">
+          Following Kim &amp; Pavlov's (2019) structural debriefing model, the post-scenario
+          debrief translates implicit game experience into explicit systems reasoning vocabulary.
+          Three components are implemented.
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="element-card">
+        <div class="element-tag" style="background:rgba(34,197,94,0.12);color:#22c55e;border:none">Component 1</div>
+        <div class="element-name">Decision Timeline</div>
+        <div class="element-def">
+          Visual replay of all 8 decisions showing extraction choice per day
+          and whether the causal structure panel was consulted.
+          Surfaces patterns the player may not have been consciously aware of.
+        </div>
+      </div>
+
+      <div class="element-card">
+        <div class="element-tag" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:none">Component 2</div>
+        <div class="element-name">Causal Map</div>
+        <div class="element-def">
+          Player draws the feedback structure of the scenario by placing
+          directed edges with polarity. One edge pre-placed as anchor.
+          Completed map scored against reference model — missing the
+          B1 loop edge indicates feedback recognition not yet internalized.
+        </div>
+      </div>
+
+      <div class="element-card">
+        <div class="element-tag" style="background:rgba(74,158,255,0.12);color:#4a9eff;border:none">Component 3</div>
+        <div class="element-name">Structured Reflection</div>
+        <div class="element-def">
+          Three targeted prompts implementing Chi et al.'s (1989)
+          self-explanation effect: unexpected outcomes, surprising feedback loops,
+          and counterfactual decisions. Responses stored for qualitative
+          analysis in future evaluation.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗺️ Causal Map — Target Edges</div>
+      <div class="card-body">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Edge</th>
+              <th>Polarity</th>
+              <th>Status</th>
+              <th>Competency element</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Treated Output → Supply Deficit</td>
+              <td><span class="pill pill-red">−</span></td>
+              <td><span class="pill pill-gray">Pre-placed (given)</span></td>
+              <td>Anchor / baseline</td>
+            </tr>
+            <tr>
+              <td>Rainfall → Reservoir Level</td>
+              <td><span class="pill pill-green">+</span></td>
+              <td><span class="pill pill-blue">Player must place</span></td>
+              <td>CE-3 Time-delay awareness</td>
+            </tr>
+            <tr>
+              <td>Extraction Rate → Reservoir Level</td>
+              <td><span class="pill pill-red">−</span></td>
+              <td><span class="pill pill-blue">Player must place</span></td>
+              <td>CE-1 Causal reasoning</td>
+            </tr>
+            <tr>
+              <td>Extraction Rate → Treated Output</td>
+              <td><span class="pill pill-green">+</span></td>
+              <td><span class="pill pill-blue">Player must place</span></td>
+              <td>CE-1 Causal reasoning</td>
+            </tr>
+            <tr>
+              <td>Reservoir Level → Extraction Rate <strong>(B1)</strong></td>
+              <td><span class="pill pill-green">+</span></td>
+              <td><span class="pill pill-blue">Player must place</span></td>
+              <td><strong>CE-2 Feedback loop recognition</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div><!-- end doc-body -->
+</body>
+</html>

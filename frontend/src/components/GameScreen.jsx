@@ -1,35 +1,40 @@
-import { useState }      from 'react'
-import SystemDiagram     from './SystemDiagram'
-import StatsPanel        from './StatsPanel'
-import NarrativePanel    from './NarrativePanel'
-import DecisionPanel     from './DecisionPanel'
+import { useState }       from 'react'
+import SystemDiagram      from './SystemDiagram'
+import StatsPanel         from './StatsPanel'
+import NarrativePanel     from './NarrativePanel'
+import DecisionPanel      from './DecisionPanel'
+import CausalPanelModal   from './CausalPanelModal'
 
 export default function GameScreen({
   scenario, gameState, node, decisions,
   nodeLogState, onConfirmDecision, onLogEvent, dispatch,
 }) {
-  const [hoveredStats, setHoveredStats] = useState([])
+  const [hoveredStats,    setHoveredStats]    = useState([])
+  const [showCausalPanel, setShowCausalPanel] = useState(false)
 
   function handleStatView(statId) {
-    // Permanent log — only fires if not already recorded
     dispatch({ type: 'LOG_STAT', stat: statId })
     onLogEvent('VIEW_STAT', { stat: statId })
   }
 
   function handleStatHover(statId) {
-    // Transient — drives visual highlight only, no logging
     setHoveredStats(statId ? [statId] : [])
   }
 
-  function handleCausalPanelView() {
-    dispatch({ type: 'LOG_CAUSAL_PANEL' })
-    onLogEvent('VIEW_CAUSAL_PANEL', {})
+  function handleCausalPanelToggle() {
+    if (!showCausalPanel) {
+      // Only log VIEW_CAUSAL_PANEL on the way open (first or repeat)
+      dispatch({ type: 'LOG_CAUSAL_PANEL' })
+      onLogEvent('VIEW_CAUSAL_PANEL', {})
+    }
+    setShowCausalPanel(prev => !prev)
   }
 
   function handleExtractionChange(val) {
     dispatch({ type: 'LOG_EXTRACTION', value: val })
   }
 
+  // Reset panel on node advance so it doesn't carry over
   const totalNodes = 8
   const progress   = ((node?.index ?? 0) / totalNodes) * 100
 
@@ -50,9 +55,11 @@ export default function GameScreen({
             scenario={scenario}
             highlightedStats={hoveredStats}
           />
-          <button className="btn btn-ghost causal-panel-btn"
-                  onClick={handleCausalPanelView}>
-            {nodeLogState.viewedCausalPanel ? '✓ ' : ''}View Causal Structure
+          <button
+            className={`btn causal-panel-btn ${showCausalPanel ? 'btn-secondary' : 'btn-ghost'}`}
+            onClick={handleCausalPanelToggle}
+          >
+            {showCausalPanel ? '✕ Close Causal Structure' : '🔍 View Causal Structure'}
           </button>
         </aside>
 
@@ -87,6 +94,15 @@ export default function GameScreen({
           )}
         </aside>
       </div>
+
+      {/* Modal — rendered outside the grid so it overlays everything */}
+      {showCausalPanel && (
+        <CausalPanelModal
+          gameState={gameState}
+          scenario={scenario}
+          onClose={() => setShowCausalPanel(false)}
+        />
+      )}
     </div>
   )
 }
