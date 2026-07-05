@@ -63,6 +63,7 @@ def register_routes(app):
                 "title": engine.scenario["title"],
                 "description": engine.scenario["description"],
                 "extraction_options_mgd": engine.extraction_options,
+                "parameters":            engine.scenario["parameters"],
             },
             "state": session.state_json,
             "node": node,
