@@ -68,6 +68,72 @@ def register_routes(app):
             "node": node,
         }), 201
 
+    @app.get("/api/debug/session/<session_id>")
+    def debug_session(session_id):
+        """
+        Returns a full dump of all logs, decisions, and debrief
+        for a session. Development only — remove before any public deployment.
+        """
+        session = Session.query.get_or_404(session_id)
+
+        logs = (
+            InteractionLog.query
+            .filter_by(session_id=session_id)
+            .order_by(InteractionLog.server_timestamp)
+            .all()
+        )
+
+        decisions = (
+            Decision.query
+            .filter_by(session_id=session_id)
+            .order_by(Decision.node_index)
+            .all()
+        )
+
+        debrief = Debrief.query.filter_by(session_id=session_id).first()
+
+        return jsonify({
+            "session": {
+                "id":                   session.id,
+                "scenario_id":          session.scenario_id,
+                "current_node_index":   session.current_node_index,
+                "completed":            session.completed,
+                "state":                session.state_json,
+            },
+            "interaction_log_count": len(logs),
+            "interaction_logs": [
+                {
+                    "id":               l.id,
+                    "node_index":       l.node_index,
+                    "event_type":       l.event_type,
+                    "payload":          l.payload_json,
+                    "client_ts_ms":     l.client_timestamp_ms,
+                    "server_ts":        l.server_timestamp.isoformat(),
+                }
+                for l in logs
+            ],
+            "decision_count": len(decisions),
+            "decisions": [
+                {
+                    "node_index":           d.node_index,
+                    "extraction_mgd":       d.extraction_mgd,
+                    "time_to_confirm_ms":   d.time_to_confirm_ms,
+                    "revision_count":       d.revision_count,
+                    "viewed_causal_panel":  d.viewed_causal_panel,
+                    "stats_viewed":         d.stats_viewed_json,
+                    "reservoir_after":      d.reservoir_after,
+                    "treated_output":       d.treated_output,
+                    "supply_deficit":       d.supply_deficit,
+                }
+                for d in decisions
+            ],
+            "debrief": {
+                "map_score":          debrief.map_score_json,
+                "competency_profile": debrief.competency_profile_json,
+                "reflection_responses": debrief.reflection_responses_json,
+            } if debrief else None,
+        })
+
     @app.get("/api/sessions/<session_id>")
     def get_session(session_id):
         session = Session.query.get_or_404(session_id)

@@ -1,4 +1,4 @@
-export default function StatsPanel({ gameState, node, scenario, onStatView }) {
+export default function StatsPanel({ gameState, node, scenario, onStatView, onStatHover }) {
   if (!gameState || !node || !scenario) return null
 
   const p         = scenario.parameters ?? {}
@@ -10,9 +10,18 @@ export default function StatsPanel({ gameState, node, scenario, onStatView }) {
 
   function Row({ id, label, value, unit }) {
     return (
-      <div className="stat-row"
-           onMouseEnter={() => onStatView?.(id)}
-           onClick={() => onStatView?.(id)}>
+      <div
+        className="stat-row"
+        onMouseEnter={() => {
+          onStatHover?.(id)   // transient — for visual highlight
+          onStatView?.(id)    // permanent — for logging
+        }}
+        onMouseLeave={() => onStatHover?.(null)}
+        onClick={() => {
+          onStatHover?.(id)
+          onStatView?.(id)
+        }}
+      >
         <span className="stat-label">{label}</span>
         <span className="stat-value">
           {value} <span className="stat-unit">{unit}</span>
@@ -25,7 +34,6 @@ export default function StatsPanel({ gameState, node, scenario, onStatView }) {
     <div className="stats-panel">
       <h3 className="panel-title">System Status</h3>
 
-      {/* Reservoir bar */}
       <div className="reservoir-bar-container">
         <div className="reservoir-bar-label">
           <span>Reservoir Level</span>
@@ -42,10 +50,11 @@ export default function StatsPanel({ gameState, node, scenario, onStatView }) {
         </div>
       </div>
 
-      {/* Stats rows — hovering logs a VIEW_STAT event */}
       <div className="stats-list">
-        <Row id="rainfall"      label="Today's Rainfall"   value={node.rainfall_mgd.toFixed(1)} unit="MG" />
-        <Row id="demand"        label="Daily Demand"        value={p.daily_demand_mgd?.toFixed(1)} unit="MG" />
+        <Row id="rainfall" label="Today's Rainfall"
+             value={node.rainfall_mgd.toFixed(1)} unit="MG" />
+        <Row id="demand"   label="Daily Demand"
+             value={p.daily_demand_mgd?.toFixed(1)} unit="MG" />
       </div>
 
       <p className="stats-note">

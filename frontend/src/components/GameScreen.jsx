@@ -1,15 +1,24 @@
-import SystemDiagram  from './SystemDiagram'
-import StatsPanel     from './StatsPanel'
-import NarrativePanel from './NarrativePanel'
-import DecisionPanel  from './DecisionPanel'
+import { useState }      from 'react'
+import SystemDiagram     from './SystemDiagram'
+import StatsPanel        from './StatsPanel'
+import NarrativePanel    from './NarrativePanel'
+import DecisionPanel     from './DecisionPanel'
 
 export default function GameScreen({
   scenario, gameState, node, decisions,
   nodeLogState, onConfirmDecision, onLogEvent, dispatch,
 }) {
+  const [hoveredStats, setHoveredStats] = useState([])
+
   function handleStatView(statId) {
+    // Permanent log — only fires if not already recorded
     dispatch({ type: 'LOG_STAT', stat: statId })
     onLogEvent('VIEW_STAT', { stat: statId })
+  }
+
+  function handleStatHover(statId) {
+    // Transient — drives visual highlight only, no logging
+    setHoveredStats(statId ? [statId] : [])
   }
 
   function handleCausalPanelView() {
@@ -35,12 +44,11 @@ export default function GameScreen({
       </header>
 
       <div className="game-layout">
-        {/* Left: system diagram + causal panel toggle */}
         <aside className="game-sidebar-left">
           <SystemDiagram
             gameState={gameState}
             scenario={scenario}
-            highlightedStats={nodeLogState.statsViewed}
+            highlightedStats={hoveredStats}
           />
           <button className="btn btn-ghost causal-panel-btn"
                   onClick={handleCausalPanelView}>
@@ -48,7 +56,6 @@ export default function GameScreen({
           </button>
         </aside>
 
-        {/* Center: narrative + stats */}
         <main className="game-main">
           <NarrativePanel node={node} />
           <StatsPanel
@@ -56,10 +63,10 @@ export default function GameScreen({
             node={node}
             scenario={scenario}
             onStatView={handleStatView}
+            onStatHover={handleStatHover}
           />
         </main>
 
-        {/* Right: decision + history */}
         <aside className="game-sidebar-right">
           <DecisionPanel
             scenario={scenario}
