@@ -1,0 +1,131 @@
+{
+  "id": "scenario_2",
+  "title": "Growth Pressure",
+  "description": "Zone B is a new residential development coming online. Providing adequate supply causes its population to grow — and its demand to rise. Balance meeting today's demand against the future demand your decisions are creating.",
+  "parameters": {
+    "treatment_efficiency": 0.80,
+    "zone_a_demand_mgd": 2.5,
+    "zone_b_demand_start_mgd": 1.5,
+    "zone_b_demand_max_mgd": 3.0,
+    "zone_b_growth_per_step": 0.20,
+    "reservoir_min_mgd": 20,
+    "reservoir_max_mgd": 100,
+    "reservoir_start_mgd": 70
+  },
+  "extraction_options_mgd": [3, 5, 7, 9],
+  "nodes": [
+    {
+      "index": 0, "day": 1, "rainfall_mgd": 3.0,
+      "narrative": "Zone B residential development has come online alongside existing Zone A. Both zones now draw from the same treatment plant. Set today's extraction rate.",
+      "alert": null
+    },
+    {
+      "index": 1, "day": 2, "rainfall_mgd": 3.0,
+      "narrative": "Normal operations. Zone B demand is stable — residents are still moving in.",
+      "alert": null
+    },
+    {
+      "index": 2, "day": 3, "rainfall_mgd": 2.5,
+      "narrative": "Zone B occupancy is increasing. If supply has been adequate, expect demand to begin rising.",
+      "alert": "zone_b_growing"
+    },
+    {
+      "index": 3, "day": 4, "rainfall_mgd": 2.0,
+      "narrative": "Zone B demand has risen. Rainfall is easing off. Monitor both the reservoir and demand trend.",
+      "alert": "zone_b_growing"
+    },
+    {
+      "index": 4, "day": 5, "rainfall_mgd": 1.5,
+      "narrative": "Rainfall is declining. Zone B demand continues to grow if supply is being met.",
+      "alert": "rainfall_declining"
+    },
+    {
+      "index": 5, "day": 6, "rainfall_mgd": 1.0,
+      "narrative": "Low rainfall. Zone B demand may be near its peak if growth has gone unchecked. The reservoir is under pressure.",
+      "alert": "reservoir_critical_if_below_35"
+    },
+    {
+      "index": 6, "day": 7, "rainfall_mgd": 2.0,
+      "narrative": "Rainfall is recovering. Assess whether the system is stabilizing or still under stress.",
+      "alert": null
+    },
+    {
+      "index": 7, "day": 8, "rainfall_mgd": 3.0,
+      "narrative": "Normal rainfall has returned. This is the final operating day.",
+      "alert": null
+    }
+  ],
+  "ecd": {
+    "competency_elements": [
+      "causal_reasoning",
+      "feedback_recognition",
+      "time_delay_awareness",
+      "multivariable_synthesis"
+    ],
+    "evidence_rules": [
+      {
+        "element": "feedback_recognition",
+        "rule": "extraction_at_node_lte",
+        "node_index": 3,
+        "threshold": 5,
+        "score": "high"
+      },
+      {
+        "element": "time_delay_awareness",
+        "rule": "extraction_at_node_lte",
+        "node_index": 2,
+        "threshold": 5,
+        "score": "high"
+      }
+    ]
+  },
+  "debrief": {
+    "causal_map": {
+      "nodes": [
+        "rainfall", "reservoir_level", "extraction_rate",
+        "treated_output", "zone_b_demand"
+      ],
+      "pre_placed_edges": [
+        { "from": "treated_output", "to": "zone_b_demand", "polarity": "+" }
+      ],
+      "target_edges": [
+        { "from": "rainfall",        "to": "reservoir_level", "polarity": "+" },
+        { "from": "extraction_rate", "to": "reservoir_level", "polarity": "-" },
+        { "from": "extraction_rate", "to": "treated_output",  "polarity": "+" },
+        { "from": "reservoir_level", "to": "extraction_rate", "polarity": "+", "loop": "B1" },
+        { "from": "zone_b_demand",   "to": "extraction_rate", "polarity": "+", "loop": "R1" }
+      ]
+    },
+    "reflection_prompts": [
+      {
+        "prompt_id": "demand_change",
+        "text": "Did Zone B's demand change over the 8 days? What caused the change?"
+      },
+      {
+        "prompt_id": "supply_tradeoff",
+        "text": "Describe a moment where meeting Zone B's demand made the reservoir situation worse."
+      },
+      {
+        "prompt_id": "strategy",
+        "text": "How would your strategy change if Zone B kept growing indefinitely?"
+      }
+    ]
+  },
+  "diagram": {
+    "nodes": [
+      { "id": "rainfall",        "label": "Rainfall",       "x": 90,  "y": 55  },
+      { "id": "reservoir_level", "label": "Reservoir",      "x": 90,  "y": 210 },
+      { "id": "extraction_rate", "label": "Extraction",     "x": 320, "y": 130 },
+      { "id": "treated_output",  "label": "Treated Output", "x": 320, "y": 290 },
+      { "id": "zone_b_demand",   "label": "Zone B Demand",  "x": 555, "y": 210 }
+    ],
+    "edges": [
+      { "from": "rainfall",        "to": "reservoir_level", "polarity": "+", "curve": null                 },
+      { "from": "reservoir_level", "to": "extraction_rate", "polarity": "+", "curve": [190, 40],  "isLoop": true, "loopLabel": "B1" },
+      { "from": "extraction_rate", "to": "reservoir_level", "polarity": "-", "curve": [190, 270]            },
+      { "from": "extraction_rate", "to": "treated_output",  "polarity": "+", "curve": null                 },
+      { "from": "treated_output",  "to": "zone_b_demand",   "polarity": "+", "curve": null                 },
+      { "from": "zone_b_demand",   "to": "extraction_rate", "polarity": "+", "curve": [490, 50], "isLoop": true, "loopLabel": "R1" }
+    ]
+  }
+}
