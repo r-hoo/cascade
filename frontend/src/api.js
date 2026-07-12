@@ -13,18 +13,11 @@ async function request(method, path, body) {
   return res.json()
 }
 
-export const getScenarios    = ()             => request('GET',  '/scenarios')
-export const startSession    = (scenarioId) =>
-  request('POST', '/sessions', { scenario_id: scenarioId })
-
-export const logEvent        = (sessionId, body) =>
-  request('POST', `/sessions/${sessionId}/log`, body)
-
-export const submitDecision  = (sessionId, body) =>
-  request('POST', `/sessions/${sessionId}/decision`, body)
-
-export const getDebriefConfig = (sessionId) =>
-  request('GET', `/sessions/${sessionId}/debrief-config`)
-
-export const submitDebrief   = (sessionId, body) =>
-  request('POST', `/sessions/${sessionId}/debrief`, body)
+export const getScenarios         = ()              => request('GET',  '/scenarios')
+export const startSession         = (scenarioId)    => request('POST', '/sessions', { scenario_id: scenarioId })
+export const logEvent             = (sessionId, b)  => request('POST', `/sessions/${sessionId}/log`, b)
+export const submitDecision       = (sessionId, b)  => request('POST', `/sessions/${sessionId}/decision`, b)
+export const getDebriefConfig     = (sessionId)     => request('GET',  `/sessions/${sessionId}/debrief-config`)
+export const submitDebrief        = (sessionId, b)  => request('POST', `/sessions/${sessionId}/debrief`, b)
+export const submitKnowledgeCheck = (sessionId, b)  => request('POST', `/sessions/${sessionId}/knowledge-check`, b)
+export const getKnowledgeCheck    = (sessionId, t)  => request('GET',  `/sessions/${sessionId}/knowledge-check/${t}`)

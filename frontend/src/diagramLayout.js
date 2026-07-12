@@ -87,4 +87,4 @@ export function computeEdge(edge, nodeMap) {
 export const NODES    = S1_NODES
 export const DIAGRAM_EDGES = S1_EDGES
 export const nodeMap  = Object.fromEntries(S1_NODES.map(n => [n.id, n]))
-export { R_NODE as R, VIEWBOX }
+export { R_NODE as R }

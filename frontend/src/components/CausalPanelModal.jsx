@@ -1,4 +1,13 @@
-import { NODES, DIAGRAM_EDGES, computeEdge, R } from '../diagramLayout'
+import { getLayout, computeEdge, R_NODE, VIEWBOX } from '../diagramLayout'
+
+function nodeColor(id) {
+  const colors = {
+    reservoir_level: '#1e3a5f',
+    extraction_rate: '#1e3a2a',
+    rainfall:        '#1e2a3a',
+  }
+  return colors[id] ?? 'var(--node-default)'
+}
 
 const ANNOTATIONS = [
   {
@@ -18,16 +27,9 @@ const ANNOTATIONS = [
   },
 ]
 
-function nodeColor(id) {
-  const colors = {
-    reservoir_level: '#1e3a5f',
-    extraction_rate: '#1e3a2a',
-    rainfall:        '#1e2a3a',
-  }
-  return colors[id] ?? 'var(--node-default)'
-}
-
 export default function CausalPanelModal({ gameState, scenario, onClose }) {
+  const { nodes, edges, nodeMap } = getLayout(scenario)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card" onClick={e => e.stopPropagation()}>
@@ -44,9 +46,7 @@ export default function CausalPanelModal({ gameState, scenario, onClose }) {
         </div>
 
         <div className="modal-body">
-
-          {/* Clean SVG — no inline annotation text */}
-          <svg viewBox="0 0 680 410" className="modal-diagram-svg">
+          <svg viewBox={VIEWBOX} className="modal-diagram-svg">
             <defs>
               <marker id="m-arr-pos" markerWidth="8" markerHeight="6"
                       refX="7" refY="3" orient="auto">
@@ -62,16 +62,16 @@ export default function CausalPanelModal({ gameState, scenario, onClose }) {
               </marker>
             </defs>
 
-            {/* Edges */}
-            {DIAGRAM_EDGES.map((edge, i) => {
-              const geo    = computeEdge(edge)
-              const isLoop = edge.isLoop
-              const color  = isLoop
+            {edges.map((edge, i) => {
+              const geo      = computeEdge(edge, nodeMap)
+              const isLoop   = edge.isLoop
+              const color    = isLoop
                 ? 'var(--color-accent)'
                 : edge.polarity === '+'
                   ? 'var(--color-success)'
                   : 'var(--color-danger)'
-              const markerId = isLoop ? 'm-arr-blue'
+              const markerId = isLoop
+                ? 'm-arr-blue'
                 : edge.polarity === '+' ? 'm-arr-pos' : 'm-arr-neg'
 
               return (
@@ -85,47 +85,40 @@ export default function CausalPanelModal({ gameState, scenario, onClose }) {
                     strokeDasharray={isLoop ? '6 3' : undefined}
                     markerEnd={`url(#${markerId})`}
                   />
-                  {/* Polarity label only — no annotation text */}
                   <text
-                    x={geo.mx}
-                    y={geo.my - 7}
+                    x={geo.mx} y={geo.my - 7}
                     textAnchor="middle"
                     className="edge-label"
                     fill={color}
                   >
                     {edge.polarity}
                   </text>
-                  {/* B1 marker on the feedback loop edge only */}
-                  {isLoop && (
+                  {isLoop && edge.loopLabel && (
                     <text
-                      x={geo.mx}
-                      y={geo.my + 14}
+                      x={geo.mx} y={geo.my + 14}
                       textAnchor="middle"
                       className="loop-label"
                       fill="var(--color-accent)"
                     >
-                      B1
+                      {edge.loopLabel}
                     </text>
                   )}
                 </g>
               )
             })}
 
-            {/* Nodes */}
-            {NODES.map(node => {
-              const fill        = nodeColor(node.id)
+            {nodes.map(node => {
               const isReservoir = node.id === 'reservoir_level'
-              const nodeR       = isReservoir ? R + 4 : R
+              const nodeR       = isReservoir ? R_NODE + 4 : R_NODE
 
               return (
                 <g key={node.id}>
                   <circle
                     cx={node.x} cy={node.y} r={nodeR}
-                    fill={fill}
+                    fill={nodeColor(node.id)}
                     stroke={isReservoir ? 'var(--color-accent)' : 'var(--node-stroke)'}
                     strokeWidth={isReservoir ? 2.5 : 1.5}
                   />
-                  {/* Live reservoir % inside the node */}
                   {isReservoir && gameState && (
                     <text
                       x={node.x} y={node.y + 5}
@@ -138,10 +131,8 @@ export default function CausalPanelModal({ gameState, scenario, onClose }) {
                       )}%
                     </text>
                   )}
-                  {/* Node label below the circle */}
                   <text
-                    x={node.x}
-                    y={node.y + nodeR + 16}
+                    x={node.x} y={node.y + nodeR + 16}
                     textAnchor="middle"
                     className="node-label"
                   >
@@ -152,19 +143,16 @@ export default function CausalPanelModal({ gameState, scenario, onClose }) {
             })}
           </svg>
 
-          {/* Annotation legend — all explanatory text lives here */}
           <div className="modal-annotations">
             {ANNOTATIONS.map(({ label, color, desc }) => (
               <div key={label} className="ann-item">
-                <div className="ann-label-row" style={{ color }}>
-                  {label}
-                </div>
+                <div className="ann-label-row" style={{ color }}>{label}</div>
                 <div className="ann-desc">{desc}</div>
               </div>
             ))}
           </div>
-
         </div>
+
       </div>
     </div>
   )

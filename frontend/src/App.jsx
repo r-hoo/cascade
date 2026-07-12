@@ -1,17 +1,20 @@
-import { useReducer, useCallback } from 'react'
-import StartScreen       from './components/StartScreen'
-import OnboardingModal   from './components/OnboardingModal'
-import GameScreen        from './components/GameScreen'
-import ConsequenceScreen from './components/ConsequenceScreen'
-import DebriefScreen     from './components/DebriefScreen'
-import * as api          from './api'
+import { useReducer, useCallback }  from 'react'
+import StartScreen                  from './components/StartScreen'
+import OnboardingModal              from './components/OnboardingModal'
+import KnowledgeCheckScreen         from './components/KnowledgeCheckScreen'
+import GameScreen                   from './components/GameScreen'
+import ConsequenceScreen            from './components/ConsequenceScreen'
+import DebriefScreen                from './components/DebriefScreen'
+import * as api                     from './api'
 
 const PHASE = {
   START:       'start',
+  PRE_CHECK:   'pre_check',
   ONBOARDING:  'onboarding',
   PLAYING:     'playing',
   CONSEQUENCE: 'consequence',
   DEBRIEF:     'debrief',
+  POST_CHECK:  'post_check',
   COMPLETE:    'complete',
 }
 
@@ -26,16 +29,18 @@ function freshNodeLog() {
 }
 
 const init = {
-  phase:        PHASE.START,
-  sessionId:    null,
-  scenario:     null,
-  gameState:    null,
-  currentNode:  null,
-  lastResult:   null,
-  decisions:    [],
-  debriefConfig:null,
-  debriefResult:null,
-  nodeLogState: freshNodeLog(),
+  phase:           PHASE.START,
+  sessionId:       null,
+  scenario:        null,
+  gameState:       null,
+  currentNode:     null,
+  lastResult:      null,
+  decisions:       [],
+  debriefConfig:   null,
+  debriefResult:   null,
+  preCheckResult:  null,
+  postCheckResult: null,
+  nodeLogState:    freshNodeLog(),
 }
 
 function reducer(state, action) {
@@ -44,13 +49,24 @@ function reducer(state, action) {
     case 'SESSION_STARTED':
       return {
         ...state,
-        phase:        PHASE.ONBOARDING,
-        sessionId:    action.payload.sessionId,
-        scenario:     action.payload.scenario,
-        gameState:    action.payload.state,
-        currentNode:  action.payload.node,
-        decisions:    [],
-        nodeLogState: freshNodeLog(),
+        phase:           PHASE.PRE_CHECK,
+        sessionId:       action.payload.sessionId,
+        scenario:        action.payload.scenario,
+        gameState:       action.payload.state,
+        currentNode:     action.payload.node,
+        decisions:       [],
+        preCheckResult:  null,
+        postCheckResult: null,
+        debriefResult:   null,
+        debriefConfig:   null,
+        nodeLogState:    freshNodeLog(),
+      }
+
+    case 'PRE_CHECK_DONE':
+      return {
+        ...state,
+        phase:          PHASE.ONBOARDING,
+        preCheckResult: action.result,
       }
 
     case 'BEGIN_PLAY':
@@ -104,7 +120,18 @@ function reducer(state, action) {
       return { ...state, debriefConfig: action.config }
 
     case 'DEBRIEF_SUBMITTED':
-      return { ...state, phase: PHASE.COMPLETE, debriefResult: action.result }
+      return {
+        ...state,
+        phase:        PHASE.POST_CHECK,
+        debriefResult:action.result,
+      }
+
+    case 'POST_CHECK_DONE':
+      return {
+        ...state,
+        phase:           PHASE.COMPLETE,
+        postCheckResult: action.result,
+      }
 
     case 'RESET':
       return { ...init, nodeLogState: freshNodeLog() }
@@ -137,6 +164,13 @@ export default function App() {
         state:     data.state,
         node:      data.node,
       },
+    })
+  }
+
+  async function handlePreCheck(responses) {
+    return await api.submitKnowledgeCheck(state.sessionId, {
+      timing: 'pre',
+      responses,
     })
   }
 
@@ -175,10 +209,29 @@ export default function App() {
     dispatch({ type: 'DEBRIEF_SUBMITTED', result })
   }
 
+  async function handlePostCheck(responses) {
+    return await api.submitKnowledgeCheck(state.sessionId, {
+      timing: 'post',
+      responses,
+    })
+  }
+
   const { phase } = state
 
   if (phase === PHASE.START)
-    return <StartScreen onStart={handleStart} />
+    return (
+      <StartScreen onStart={handleStart} />
+    )
+
+  if (phase === PHASE.PRE_CHECK)
+    return (
+      <KnowledgeCheckScreen
+        timing="pre"
+        sessionId={state.sessionId}
+        onSubmit={handlePreCheck}
+        onContinue={(result) => dispatch({ type: 'PRE_CHECK_DONE', result })}
+      />
+    )
 
   if (phase === PHASE.ONBOARDING)
     return (
@@ -213,14 +266,39 @@ export default function App() {
       />
     )
 
-  if (phase === PHASE.DEBRIEF || phase === PHASE.COMPLETE)
+  if (phase === PHASE.DEBRIEF)
+    return (
+      <DebriefScreen
+        scenario={state.scenario}
+        debriefConfig={state.debriefConfig}
+        decisions={state.decisions}
+        debriefResult={null}
+        completed={false}
+        onSubmit={handleDebriefSubmit}
+        onReset={() => dispatch({ type: 'RESET' })}
+      />
+    )
+
+  if (phase === PHASE.POST_CHECK)
+    return (
+      <KnowledgeCheckScreen
+        timing="post"
+        sessionId={state.sessionId}
+        onSubmit={handlePostCheck}
+        onContinue={(result) => dispatch({ type: 'POST_CHECK_DONE', result })}
+      />
+    )
+
+  if (phase === PHASE.COMPLETE)
     return (
       <DebriefScreen
         scenario={state.scenario}
         debriefConfig={state.debriefConfig}
         decisions={state.decisions}
         debriefResult={state.debriefResult}
-        completed={phase === PHASE.COMPLETE}
+        preCheckResult={state.preCheckResult}
+        postCheckResult={state.postCheckResult}
+        completed={true}
         onSubmit={handleDebriefSubmit}
         onReset={() => dispatch({ type: 'RESET' })}
       />
