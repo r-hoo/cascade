@@ -1,12 +1,14 @@
 import { useReducer, useCallback } from 'react'
-import StartScreen      from './components/StartScreen'
-import GameScreen       from './components/GameScreen'
+import StartScreen       from './components/StartScreen'
+import OnboardingModal   from './components/OnboardingModal'
+import GameScreen        from './components/GameScreen'
 import ConsequenceScreen from './components/ConsequenceScreen'
-import DebriefScreen    from './components/DebriefScreen'
-import * as api         from './api'
+import DebriefScreen     from './components/DebriefScreen'
+import * as api          from './api'
 
 const PHASE = {
   START:       'start',
+  ONBOARDING:  'onboarding',
   PLAYING:     'playing',
   CONSEQUENCE: 'consequence',
   DEBRIEF:     'debrief',
@@ -42,7 +44,7 @@ function reducer(state, action) {
     case 'SESSION_STARTED':
       return {
         ...state,
-        phase:        PHASE.PLAYING,
+        phase:        PHASE.ONBOARDING,
         sessionId:    action.payload.sessionId,
         scenario:     action.payload.scenario,
         gameState:    action.payload.state,
@@ -51,8 +53,14 @@ function reducer(state, action) {
         nodeLogState: freshNodeLog(),
       }
 
+    case 'BEGIN_PLAY':
+      return { ...state, phase: PHASE.PLAYING }
+
     case 'LOG_CAUSAL_PANEL':
-      return { ...state, nodeLogState: { ...state.nodeLogState, viewedCausalPanel: true } }
+      return {
+        ...state,
+        nodeLogState: { ...state.nodeLogState, viewedCausalPanel: true },
+      }
 
     case 'LOG_STAT': {
       if (state.nodeLogState.statsViewed.includes(action.stat)) return state
@@ -84,11 +92,10 @@ function reducer(state, action) {
         gameState:   action.payload.newState,
         lastResult:  action.payload.result,
         decisions:   [...state.decisions, action.payload.decisionData],
-        currentNode: action.payload.nextNode,   // null when scenario complete
+        currentNode: action.payload.nextNode,
       }
 
     case 'NEXT_NODE':
-      // currentNode null means scenario is done → go to debrief
       return state.currentNode === null
         ? { ...state, phase: PHASE.DEBRIEF }
         : { ...state, phase: PHASE.PLAYING, nodeLogState: freshNodeLog() }
@@ -110,7 +117,6 @@ function reducer(state, action) {
 export default function App() {
   const [state, dispatch] = useReducer(reducer, init)
 
-  // Fire-and-forget — never blocks the user
   const logEvent = useCallback((eventType, payload = {}) => {
     if (!state.sessionId) return
     api.logEvent(state.sessionId, {
@@ -123,34 +129,39 @@ export default function App() {
 
   async function handleStart(scenarioId) {
     const data = await api.startSession(scenarioId)
-    dispatch({ type: 'SESSION_STARTED', payload: {
-      sessionId: data.session_id,
-      scenario:  data.scenario,
-      state:     data.state,
-      node:      data.node,
-    }})
+    dispatch({
+      type: 'SESSION_STARTED',
+      payload: {
+        sessionId: data.session_id,
+        scenario:  data.scenario,
+        state:     data.state,
+        node:      data.node,
+      },
+    })
   }
 
   async function handleDecision(extractionMgd) {
-    const nls = state.nodeLogState
+    const nls  = state.nodeLogState
     const body = {
-      extraction_mgd:     extractionMgd,
-      time_to_confirm_ms: nls.startTimeMs ? Date.now() - nls.startTimeMs : null,
-      revision_count:     nls.revisionCount,
-      viewed_causal_panel:nls.viewedCausalPanel,
-      stats_viewed:       nls.statsViewed,
+      extraction_mgd:      extractionMgd,
+      time_to_confirm_ms:  nls.startTimeMs ? Date.now() - nls.startTimeMs : null,
+      revision_count:      nls.revisionCount,
+      viewed_causal_panel: nls.viewedCausalPanel,
+      stats_viewed:        nls.statsViewed,
     }
     const data = await api.submitDecision(state.sessionId, body)
-    dispatch({ type: 'DECISION_CONFIRMED', payload: {
-      result:       data.result,
-      newState:     data.new_state,
-      nextNode:     data.next_node,
-      decisionData: { node_index: state.currentNode.index, ...body },
-    }})
+    dispatch({
+      type: 'DECISION_CONFIRMED',
+      payload: {
+        result:       data.result,
+        newState:     data.new_state,
+        nextNode:     data.next_node,
+        decisionData: { node_index: state.currentNode.index, ...body },
+      },
+    })
   }
 
   function handleNextNode() {
-    // If there's no next node, also kick off debrief config fetch
     if (state.currentNode === null) {
       api.getDebriefConfig(state.sessionId)
         .then(cfg => dispatch({ type: 'DEBRIEF_LOADED', config: cfg }))
@@ -168,6 +179,15 @@ export default function App() {
 
   if (phase === PHASE.START)
     return <StartScreen onStart={handleStart} />
+
+  if (phase === PHASE.ONBOARDING)
+    return (
+      <OnboardingModal
+        scenario={state.scenario}
+        gameState={state.gameState}
+        onBegin={() => dispatch({ type: 'BEGIN_PLAY' })}
+      />
+    )
 
   if (phase === PHASE.PLAYING)
     return (
@@ -196,6 +216,7 @@ export default function App() {
   if (phase === PHASE.DEBRIEF || phase === PHASE.COMPLETE)
     return (
       <DebriefScreen
+        scenario={state.scenario}
         debriefConfig={state.debriefConfig}
         decisions={state.decisions}
         debriefResult={state.debriefResult}

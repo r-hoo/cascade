@@ -517,3 +517,211 @@ body {
 .ann-desc {
   font-size: 12px; color: var(--text-2); line-height: 1.5;
 }
+
+/* ========================
+   ONBOARDING MODAL
+======================== */
+.onboarding-card {
+  max-width: 720px;
+}
+
+.onboarding-description {
+  display: flex; flex-direction: column; gap: 10px;
+  font-size: 15px; color: var(--text-2); line-height: 1.7;
+}
+.onboarding-description strong { color: var(--text); }
+
+.onboarding-diagram { display: flex; flex-direction: column; gap: 8px; }
+.onboarding-diagram-label { font-size: 12px; color: var(--text-3); }
+
+/* Override diagram card styling inside modal so it fills width */
+.onboarding-diagram .system-diagram {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px;
+  background: var(--bg);
+}
+
+.onboarding-callouts {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.onboarding-callout {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 14px 16px;
+}
+
+.oc-icon  { font-size: 20px; flex-shrink: 0; padding-top: 1px; }
+.oc-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.oc-desc  { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+.onboarding-begin { width: 100%; justify-content: center; }
+
+.stat-sublabel {
+  color: var(--text-3);
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* ========================
+   ZONE B CONSEQUENCE
+======================== */
+.zoneb-change {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.zoneb-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zoneb-bar-label {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.zoneb-explanation {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.6;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+/* ========================
+   SCENARIO SELECTION
+======================== */
+.scenario-select-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  text-align: left;
+  margin-bottom: 8px;
+  margin-top: 8px;
+}
+
+.scenario-loading {
+  color: var(--text-3);
+  font-size: 13px;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.scenario-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.scenario-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+
+.scenario-card:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.scenario-card.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.scenario-card.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sc-top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sc-number {
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--text-3);
+  background: var(--border);
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+
+.sc-difficulty {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sc-selected-pill {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 1px 10px;
+  font-family: var(--mono);
+}
+
+.sc-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.sc-desc {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.sc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.sc-meta-item {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.sc-loop-pill {
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-weight: 600;
+}

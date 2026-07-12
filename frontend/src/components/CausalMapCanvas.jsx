@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { NODES, computeEdge, R, VIEWBOX, nodeMap } from '../diagramLayout'
+import { useState }                          from 'react'
+import { getLayout, computeEdge, R_NODE, VIEWBOX } from '../diagramLayout'
 
 const C = {
   prePlaced: '#6b7280',
@@ -9,19 +9,24 @@ const C = {
   pending:   '#8b5cf6',
 }
 
-export default function CausalMapCanvas({ prePlacedEdges = [], onChange }) {
-  const [source,      setSource]      = useState(null)   // node id of first click
-  const [pendingEdge, setPendingEdge] = useState(null)   // {from, to} awaiting polarity
-  const [placed,      setPlaced]      = useState([])     // [{from,to,polarity}]
+export default function CausalMapCanvas({ scenario, prePlacedEdges = [], onChange }) {
+  const [source,       setSource]       = useState(null)
+  const [pendingEdge,  setPendingEdge]  = useState(null)
+  const [placed,       setPlaced]       = useState([])
+
+  // Derive nodes and nodeMap from the active scenario
+  const { nodes, nodeMap } = getLayout(scenario)
 
   function handleNodeClick(id) {
-    if (pendingEdge) return                              // polarity picker is open
+    if (pendingEdge) return
     if (!source) {
       setSource(id)
       return
     }
-    if (source === id) { setSource(null); return }      // deselect
-
+    if (source === id) {
+      setSource(null)
+      return
+    }
     // Prevent duplicate edges
     const duplicate =
       placed.some(e => e.from === source && e.to === id) ||
@@ -45,18 +50,18 @@ export default function CausalMapCanvas({ prePlacedEdges = [], onChange }) {
   }
 
   function edgeGeom(edge) {
-    return computeEdge({ ...edge, curve: null })
+    return computeEdge({ ...edge, curve: null }, nodeMap)
   }
 
-  // Dashed preview line from pending source → target
   function pendingPath() {
     if (!pendingEdge) return ''
-    const f = nodeMap[pendingEdge.from], t = nodeMap[pendingEdge.to]
+    const f = nodeMap[pendingEdge.from]
+    const t = nodeMap[pendingEdge.to]
     if (!f || !t) return ''
     const dx = t.x - f.x, dy = t.y - f.y
     const dist = Math.sqrt(dx * dx + dy * dy)
     const ux = dx / dist, uy = dy / dist
-    return `M ${f.x + ux*R} ${f.y + uy*R} L ${t.x - ux*R} ${t.y - uy*R}`
+    return `M ${f.x + ux * R_NODE} ${f.y + uy * R_NODE} L ${t.x - ux * R_NODE} ${t.y - uy * R_NODE}`
   }
 
   return (
@@ -70,8 +75,13 @@ export default function CausalMapCanvas({ prePlacedEdges = [], onChange }) {
       <svg viewBox={VIEWBOX} className="diagram-svg causal-map-svg">
         <defs>
           {[['pos', C.positive], ['neg', C.negative], ['pre', C.prePlaced]].map(([id, col]) => (
-            <marker key={id} id={`cm-${id}`}
-                    markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <marker
+              key={id}
+              id={`cm-${id}`}
+              markerWidth="8" markerHeight="6"
+              refX="7" refY="3"
+              orient="auto"
+            >
               <polygon points="0 0,8 3,0 6" fill={col} />
             </marker>
           ))}
@@ -82,10 +92,19 @@ export default function CausalMapCanvas({ prePlacedEdges = [], onChange }) {
           const g = edgeGeom(e)
           return (
             <g key={`pre-${i}`}>
-              <path d={g.path} stroke={C.prePlaced} strokeWidth={1.5}
-                    fill="none" markerEnd="url(#cm-pre)" />
-              <text x={g.mx} y={g.my - 7} textAnchor="middle"
-                    className="edge-label" fill={C.prePlaced}>
+              <path
+                d={g.path}
+                stroke={C.prePlaced}
+                strokeWidth={1.5}
+                fill="none"
+                markerEnd="url(#cm-pre)"
+              />
+              <text
+                x={g.mx} y={g.my - 7}
+                textAnchor="middle"
+                className="edge-label"
+                fill={C.prePlaced}
+              >
                 {e.polarity} (given)
               </text>
             </g>
@@ -96,39 +115,77 @@ export default function CausalMapCanvas({ prePlacedEdges = [], onChange }) {
         {placed.map((e, i) => {
           const g   = edgeGeom(e)
           const col = e.polarity === '+' ? C.positive : C.negative
-          const mid = e.polarity === '+' ? 'cm-pos' : 'cm-neg'
+          const mid = e.polarity === '+' ? 'cm-pos'   : 'cm-neg'
           return (
-            <g key={`p-${i}`} style={{ cursor: 'pointer' }} onClick={() => removeEdge(i)}>
-              <path d={g.path} stroke={col} strokeWidth={2}
-                    fill="none" markerEnd={`url(#${mid})`} />
-              <text x={g.mx} y={g.my - 7} textAnchor="middle"
-                    className="edge-label" fill={col}>{e.polarity}</text>
-              <text x={g.mx} y={g.my + 10} textAnchor="middle"
-                    className="edge-remove-hint">✕</text>
+            <g
+              key={`p-${i}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => removeEdge(i)}
+            >
+              <path
+                d={g.path}
+                stroke={col}
+                strokeWidth={2}
+                fill="none"
+                markerEnd={`url(#${mid})`}
+              />
+              <text
+                x={g.mx} y={g.my - 7}
+                textAnchor="middle"
+                className="edge-label"
+                fill={col}
+              >
+                {e.polarity}
+              </text>
+              <text
+                x={g.mx} y={g.my + 10}
+                textAnchor="middle"
+                className="edge-remove-hint"
+              >
+                ✕
+              </text>
             </g>
           )
         })}
 
-        {/* Pending dashed preview */}
+        {/* Dashed pending preview */}
         {pendingEdge && (
-          <path d={pendingPath()} stroke={C.pending} strokeWidth={1.5}
-                strokeDasharray="5 3" fill="none" />
+          <path
+            d={pendingPath()}
+            stroke={C.pending}
+            strokeWidth={1.5}
+            strokeDasharray="5 3"
+            fill="none"
+          />
         )}
 
         {/* Nodes */}
-        {NODES.map(n => {
+        {nodes.map(n => {
           const isSrc  = source === n.id
           const isPend = pendingEdge &&
             (pendingEdge.from === n.id || pendingEdge.to === n.id)
+
           return (
-            <g key={n.id} style={{ cursor: 'pointer' }}
-               onClick={() => handleNodeClick(n.id)}>
-              <circle cx={n.x} cy={n.y} r={R}
-                fill={isSrc ? C.selected : isPend ? C.pending : 'var(--node-default)'}
+            <g
+              key={n.id}
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleNodeClick(n.id)}
+            >
+              <circle
+                cx={n.x} cy={n.y} r={R_NODE}
+                fill={
+                  isSrc  ? C.selected :
+                  isPend ? C.pending  :
+                  'var(--node-default)'
+                }
                 stroke={isSrc ? C.selected : 'var(--node-stroke)'}
-                strokeWidth={isSrc ? 3 : 2} />
-              <text x={n.x} y={n.y + 5}
-                    textAnchor="middle" className="node-label-center">
+                strokeWidth={isSrc ? 3 : 2}
+              />
+              <text
+                x={n.x} y={n.y + 5}
+                textAnchor="middle"
+                className="node-label-center"
+              >
                 {n.label}
               </text>
             </g>
@@ -148,10 +205,10 @@ export default function CausalMapCanvas({ prePlacedEdges = [], onChange }) {
           <button className="btn btn-success" onClick={() => commitEdge('+')}>
             + Positive (increases)
           </button>
-          <button className="btn btn-danger"  onClick={() => commitEdge('-')}>
+          <button className="btn btn-danger" onClick={() => commitEdge('-')}>
             − Negative (decreases)
           </button>
-          <button className="btn btn-ghost"   onClick={() => setPendingEdge(null)}>
+          <button className="btn btn-ghost" onClick={() => setPendingEdge(null)}>
             Cancel
           </button>
         </div>

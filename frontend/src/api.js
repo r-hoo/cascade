@@ -13,6 +13,7 @@ async function request(method, path, body) {
   return res.json()
 }
 
+export const getScenarios    = ()             => request('GET',  '/scenarios')
 export const startSession    = (scenarioId) =>
   request('POST', '/sessions', { scenario_id: scenarioId })
 

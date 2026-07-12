@@ -69,6 +69,48 @@ def register_routes(app):
             "node": node,
         }), 201
 
+    @app.get("/api/scenarios")
+    def list_scenarios():
+        """
+        Returns metadata for all available scenario JSON files,
+        in the order they should appear in the UI.
+        """
+        order = ["scenario_1", "scenario_2", "scenario_3"]
+        results = []
+
+        for sid in order:
+            path = os.path.join(app.config["SCENARIOS_DIR"], f"{sid}.json")
+            if not os.path.exists(path):
+                continue
+            try:
+                engine = get_engine(sid, app.config["SCENARIOS_DIR"])
+                s      = engine.scenario
+                results.append({
+                    "id":          s["id"],
+                    "title":       s["title"],
+                    "description": s["description"],
+                    "node_count":  len(s.get("nodes", [])),
+                    "loops":       _detect_loops(s),
+                })
+            except Exception:
+                continue
+
+        return jsonify(results)
+
+
+    def _detect_loops(scenario):
+        """Pull loop labels from diagram edges for the scenario card badges."""
+        edges = scenario.get("diagram", {}).get("edges", [])
+        loops = []
+        for e in edges:
+            label = e.get("loopLabel")
+            if label and label not in loops:
+                loops.append(label)
+        # Scenario 1 has no diagram key — hardcode B1
+        if not edges:
+            loops = ["B1"]
+        return loops
+    
     @app.get("/api/debug/session/<session_id>")
     def debug_session(session_id):
         """
