@@ -981,3 +981,18 @@ body {
   color: var(--text-3);
   text-align: center;
 }
+
+.stat-row-warn {
+  background: rgba(245, 158, 11, 0.06);
+  border-radius: var(--r-sm);
+}
+
+.reservoir-bar-draw-marker {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 16px;
+  background: var(--color-accent);
+  border-radius: 1px;
+  opacity: 0.6;
+}

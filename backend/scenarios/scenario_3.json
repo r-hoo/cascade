@@ -1,0 +1,157 @@
+{
+  "id": "scenario_3",
+  "title": "Compounding Pressures",
+  "description": "Three zones, two water sources, one drought. Zone B demand is growing. Zone C is a hospital that cannot lose supply for two consecutive days. A groundwater aquifer supplements your reservoir automatically — but over-draw it and it won't recover in time.",
+  "parameters": {
+    "treatment_efficiency":       0.80,
+    "zone_a_demand_mgd":          2.0,
+    "zone_c_demand_mgd":          1.0,
+    "zone_b_demand_start_mgd":    2.0,
+    "zone_b_demand_max_mgd":      4.0,
+    "zone_b_growth_per_step":     0.20,
+    "aquifer_start_mgd":          50,
+    "aquifer_max_mgd":            50,
+    "aquifer_draw_rate":          2.0,
+    "aquifer_draw_threshold":     30,
+    "aquifer_recharge_normal":    1.0,
+    "aquifer_recharge_stressed":  0.25,
+    "aquifer_stress_threshold":   10,
+    "reservoir_start_mgd":        65,
+    "reservoir_max_mgd":          100,
+    "reservoir_min_mgd":          20
+  },
+  "extraction_options_mgd": [3, 5, 7, 9],
+  "nodes": [
+    {
+      "index": 0, "day": 1, "rainfall_mgd": 2.5,
+      "narrative": "Three zones are now online. Zone A residential demand is stable at 2.0 MG/day. Zone B industrial is at 2.0 MG/day and growing. Zone C hospital requires uninterrupted supply at 1.0 MG/day. A groundwater aquifer buffer backs up the main reservoir automatically if levels drop below 30 MG.",
+      "alert": null
+    },
+    {
+      "index": 1, "day": 2, "rainfall_mgd": 2.5,
+      "narrative": "Normal operations. Zone B demand grows if supply is being met.",
+      "alert": null
+    },
+    {
+      "index": 2, "day": 3, "rainfall_mgd": 2.0,
+      "narrative": "Rainfall beginning to decline. Zone B demand has been rising. Plan ahead.",
+      "alert": "rainfall_declining"
+    },
+    {
+      "index": 3, "day": 4, "rainfall_mgd": 1.5,
+      "narrative": "Drought conditions developing. The main reservoir is trending downward.",
+      "alert": "drought_developing"
+    },
+    {
+      "index": 4, "day": 5, "rainfall_mgd": 1.0,
+      "narrative": "Drought active. If the main reservoir drops below 30 MG, the aquifer will begin drawing automatically at 2.0 MG/day to supplement treatment.",
+      "alert": "drought_active"
+    },
+    {
+      "index": 5, "day": 6, "rainfall_mgd": 0.5,
+      "narrative": "Severe drought. If the aquifer is drawing, monitor its level carefully — below 10 MG it recharges at only 0.25 MG/day instead of 1.0 MG/day.",
+      "alert": "drought_severe"
+    },
+    {
+      "index": 6, "day": 7, "rainfall_mgd": 0.5,
+      "narrative": "Drought continues. Aquifer stress is a risk if the buffer has been heavily drawn. Zone C supply must be maintained.",
+      "alert": "drought_severe"
+    },
+    {
+      "index": 7, "day": 8, "rainfall_mgd": 1.0,
+      "narrative": "Slight rainfall recovery. Check whether the aquifer is recovering or still stressed.",
+      "alert": null
+    },
+    {
+      "index": 8, "day": 9, "rainfall_mgd": 2.0,
+      "narrative": "Rainfall recovering steadily. Assess whether extraction can increase to meet Zone B demand.",
+      "alert": null
+    },
+    {
+      "index": 9, "day": 10, "rainfall_mgd": 2.5,
+      "narrative": "Normal rainfall has returned. This is the final operating day. Assess the system's overall stability.",
+      "alert": null
+    }
+  ],
+  "ecd": {
+    "competency_elements": [
+      "causal_reasoning",
+      "feedback_recognition",
+      "time_delay_awareness",
+      "multivariable_synthesis"
+    ],
+    "evidence_rules": [
+      {
+        "element": "feedback_recognition",
+        "rule": "extraction_at_node_lte",
+        "node_index": 4,
+        "threshold": 5,
+        "score": "high"
+      },
+      {
+        "element": "time_delay_awareness",
+        "rule": "extraction_at_node_lte",
+        "node_index": 2,
+        "threshold": 5,
+        "score": "high"
+      }
+    ]
+  },
+  "debrief": {
+    "causal_map": {
+      "nodes": [
+        "rainfall", "reservoir_level", "aquifer_buffer",
+        "extraction_rate", "treated_output",
+        "zone_b_demand", "zone_c_supply"
+      ],
+      "pre_placed_edges": [
+        { "from": "extraction_rate", "to": "treated_output", "polarity": "+" }
+      ],
+      "target_edges": [
+        { "from": "rainfall",        "to": "reservoir_level", "polarity": "+" },
+        { "from": "extraction_rate", "to": "reservoir_level", "polarity": "-" },
+        { "from": "reservoir_level", "to": "extraction_rate", "polarity": "+", "loop": "B1" },
+        { "from": "reservoir_level", "to": "aquifer_buffer",  "polarity": "-" },
+        { "from": "aquifer_buffer",  "to": "extraction_rate", "polarity": "+", "loop": "B2" },
+        { "from": "treated_output",  "to": "zone_b_demand",   "polarity": "+" },
+        { "from": "zone_b_demand",   "to": "extraction_rate", "polarity": "+", "loop": "R1" }
+      ]
+    },
+    "reflection_prompts": [
+      {
+        "prompt_id": "aquifer_fragility",
+        "text": "The aquifer buffer helped maintain supply during the drought. Describe how relying on it too heavily could make the system more fragile over time."
+      },
+      {
+        "prompt_id": "delayed_effects",
+        "text": "Describe a day where your decision had effects you did not notice until two or more days later."
+      },
+      {
+        "prompt_id": "zone_c_priority",
+        "text": "How did managing Zone C's supply priority change your approach compared to earlier scenarios?"
+      }
+    ]
+  },
+  "diagram": {
+    "nodes": [
+      { "id": "rainfall",        "label": "Rainfall",        "x": 80,  "y": 60  },
+      { "id": "reservoir_level", "label": "Main Reservoir",  "x": 80,  "y": 200 },
+      { "id": "aquifer_buffer",  "label": "Aquifer Buffer",  "x": 80,  "y": 340 },
+      { "id": "extraction_rate", "label": "Extraction",      "x": 330, "y": 130 },
+      { "id": "treated_output",  "label": "Treated Output",  "x": 330, "y": 270 },
+      { "id": "zone_b_demand",   "label": "Zone B Demand",   "x": 570, "y": 130 },
+      { "id": "zone_c_supply",   "label": "Zone C Supply",   "x": 570, "y": 270 }
+    ],
+    "edges": [
+      { "from": "rainfall",        "to": "reservoir_level", "polarity": "+", "curve": null },
+      { "from": "extraction_rate", "to": "reservoir_level", "polarity": "-", "curve": [200, 260] },
+      { "from": "reservoir_level", "to": "extraction_rate", "polarity": "+", "curve": [200, 50],  "isLoop": true, "loopLabel": "B1" },
+      { "from": "reservoir_level", "to": "aquifer_buffer",  "polarity": "-", "curve": null },
+      { "from": "aquifer_buffer",  "to": "extraction_rate", "polarity": "+", "curve": [200, 360], "isLoop": true, "loopLabel": "B2" },
+      { "from": "extraction_rate", "to": "treated_output",  "polarity": "+", "curve": null },
+      { "from": "treated_output",  "to": "zone_b_demand",   "polarity": "+", "curve": [450, 90] },
+      { "from": "zone_b_demand",   "to": "extraction_rate", "polarity": "+", "curve": [450, 50],  "isLoop": true, "loopLabel": "R1" },
+      { "from": "treated_output",  "to": "zone_c_supply",   "polarity": "+", "curve": null }
+    ]
+  }
+}
